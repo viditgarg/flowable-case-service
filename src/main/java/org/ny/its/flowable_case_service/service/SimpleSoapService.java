@@ -1,4 +1,4 @@
-package org.ny.its.flowablepoc.service;
+package org.ny.its.flowable_case_service.service;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -61,12 +61,12 @@ public class SimpleSoapService {
             if (matcher.find()) {
                 return matcher.group(1).trim();
             }
-//            // Simple parsing (no DOM needed!)
-//            if (res.contains("<NumberToWordsResult>")) {
-//                return res.split("<NumberToWordsResult>")[1]
-//                        .split("</NumberToWordsResult>")[0]
-//                        .trim();
-//            }
+            // // Simple parsing (no DOM needed!)
+            // if (res.contains("<NumberToWordsResult>")) {
+            // return res.split("<NumberToWordsResult>")[1]
+            // .split("</NumberToWordsResult>")[0]
+            // .trim();
+            // }
 
             return "Conversion failed";
 

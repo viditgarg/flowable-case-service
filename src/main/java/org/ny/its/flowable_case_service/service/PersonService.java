@@ -1,4 +1,4 @@
-package org.ny.its.flowablepoc.service;
+package org.ny.its.flowable_case_service.service;
 
 import lombok.RequiredArgsConstructor;
 import org.flowable.engine.delegate.DelegateExecution;

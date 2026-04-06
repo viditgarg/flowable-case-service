@@ -1,4 +1,4 @@
-package org.ny.its.flowablepoc.service;
+package org.ny.its.flowable_case_service.service;
 
 import lombok.RequiredArgsConstructor;
 import org.flowable.engine.RuntimeService;
@@ -18,13 +18,14 @@ public class IncarcerationValidationService implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
-        log.info("validating incarceration status for ::" + execution.getVariable("firstName") + " " + execution.getVariable("lastName"));
+        log.info("validating incarceration status for ::" + execution.getVariable("firstName") + " "
+                + execution.getVariable("lastName"));
 
         boolean incarcerated = true;
 
-        //To - Do
+        // To - Do
         // external services to be called
-        //call doccs and rikers services
+        // call doccs and rikers services
         execution.setVariable("incarcerationStatus", incarcerated);
         log.info("variable set: " + execution.getVariable("incarcerated"));
     }

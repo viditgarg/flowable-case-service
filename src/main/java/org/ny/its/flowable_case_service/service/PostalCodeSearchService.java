@@ -1,4 +1,4 @@
-package org.ny.its.flowablepoc.service;
+package org.ny.its.flowable_case_service.service;
 
 import org.springframework.stereotype.Service;
 import org.w3c.dom.*;
