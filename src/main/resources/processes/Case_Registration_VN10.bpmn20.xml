@@ -12,7 +12,7 @@
                 http://www.omg.org/spec/BPMN/20100524/MODEL
                 http://www.omg.org/spec/BPMN/2.0/20100501/BPMN20.xsd">
 
-    <process id="case_regV9" name="Case Registration V9" isExecutable="true">
+    <process id="case_regVN10" name="Case Registration VN10" isExecutable="true">
 
         <!-- START -->
         <startEvent id="startEvent" flowable:initiator="initiator" flowable:formKey="caseregistrationform"
