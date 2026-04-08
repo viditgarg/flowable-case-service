@@ -21,12 +21,12 @@ public class IncarcerationValidationService implements JavaDelegate {
         log.info("validating incarceration status for ::" + execution.getVariable("firstName") + " "
                 + execution.getVariable("lastName"));
 
-        boolean incarcerated = true;
+        // boolean incarcerated = false;
 
         // To - Do
         // external services to be called
         // call doccs and rikers services
-        execution.setVariable("incarcerationStatus", incarcerated);
-        log.info("variable set: " + execution.getVariable("incarcerated"));
+        execution.setVariable("incarcerationStatus", "Incarcerated");
+        log.info("variable set: " + execution.getVariable("incarcerationStatus"));
     }
 }

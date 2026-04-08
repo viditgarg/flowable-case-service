@@ -31,7 +31,7 @@
                     <flowable:string>POST</flowable:string>
                 </flowable:field>
                 <flowable:field name="requestUrl">
-                    <flowable:string>http://localhost:9080/case/searchPerson</flowable:string>
+                    <flowable:string>http://localhost:9090/api/cases/searchPerson</flowable:string>
                 </flowable:field>
                 <flowable:field name="requestHeaders">
                     <flowable:string>Content-Type: application/json</flowable:string>
@@ -69,7 +69,7 @@
                     <flowable:string>POST</flowable:string>
                 </flowable:field>
                 <flowable:field name="requestUrl">
-                    <flowable:string>http://localhost:9080/case/ssnValidation</flowable:string>
+                    <flowable:string>http://localhost:9090/api/cases/ssnValidation</flowable:string>
                 </flowable:field>
                 <flowable:field name="requestHeaders">
                     <flowable:string>Content-Type: application/json</flowable:string>
@@ -112,7 +112,7 @@
         </serviceTask>
 
         <!-- DOCCS Gateway -->
-        <exclusiveGateway id="doccsGateway" default="flow-doccsGateway-to-manual" name="DOCCS API Response Gateway"/>
+        <exclusiveGateway id="doccsGateway"  name="DOCCS API Response Gateway"/>
         <userTask id="doccsManualTask" name="DOCCS Manual Review" flowable:candidateGroups="stateworkers,managers"
                   flowable:formKey="detailsvalidationV2" flowable:formFieldValidation="true">
             <extensionElements>
@@ -121,7 +121,7 @@
         </userTask>
 
         <!-- Review Incarceration -->
-        <userTask id="reviewIssuesTask" name="Issues Review Task" flowable:async="true" flowable:assignee="$INITIATOR"
+        <userTask id="reviewIssuesTask" name="Issues Review Task" flowable:async="true" 
                   flowable:formKey="reviewIncarcerationForm" flowable:formFieldValidation="true">
             <extensionElements>
                 <modeler:initiator-can-complete xmlns:modeler="http://flowable.org/modeler">
@@ -183,10 +183,12 @@
         </sequenceFlow>
         <sequenceFlow id="flow-doccs-to-gateway" sourceRef="doccsApiTask" targetRef="doccsGateway"/>
 
-        <sequenceFlow id="flow-doccsGateway-to-manual" sourceRef="doccsGateway" targetRef="doccsManualTask"/>
-        <sequenceFlow id="flow-doccsGateway-to-join" sourceRef="doccsGateway" targetRef="parallelJoin">
+        <sequenceFlow id="flow-doccsGateway-to-manual" sourceRef="doccsGateway" targetRef="doccsManualTask">
             <conditionExpression xsi:type="tFormalExpression">
-                <![CDATA[${incarcerationStatus == false}]]></conditionExpression>
+                <![CDATA[${incarcerationStatus != null && incarcerationStatus.toString() == 'Incarcerated'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow-doccsGateway-to-join" sourceRef="doccsGateway" targetRef="parallelJoin">
+            
         </sequenceFlow>
 
 

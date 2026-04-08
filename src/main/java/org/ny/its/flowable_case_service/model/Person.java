@@ -46,20 +46,22 @@ public class Person {
 
     private String ssnInWords;
 
-    // --- Optional: For Gender Dropdown ---
-    // You might have a static list or fetch this from a service
-    public List<String> getGenderOptions() {
-        return List.of("Male", "Female", "Other", "Prefer not to say");
-    }
-
-    // --- Optional: For Gender Dropdown ---
-    // You might have a static list or fetch this from a service
-    public List<String> getIncarcerationOptions() {
-        return List.of("Select","Incarcerated", "Not Incarcerated", "On Parole");
-    }
-
-    // You might have a static list or fetch this from a service
-    public List<String> getSsnValidationOptions() {
-        return List.of("Select","true", "false");
-    }
+    /*
+     * // --- Optional: For Gender Dropdown ---
+     * // You might have a static list or fetch this from a service
+     * public List<String> getGenderOptions() {
+     * return List.of("Male", "Female", "Other", "Prefer not to say");
+     * }
+     * 
+     * // --- Optional: For Gender Dropdown ---
+     * // You might have a static list or fetch this from a service
+     * public List<String> getIncarcerationOptions() {
+     * return List.of("Select","Incarcerated", "Not Incarcerated", "On Parole");
+     * }
+     * 
+     * // You might have a static list or fetch this from a service
+     * public List<String> getSsnValidationOptions() {
+     * return List.of("Select","true", "false");
+     * }
+     */
 }
