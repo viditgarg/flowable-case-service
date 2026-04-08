@@ -86,6 +86,10 @@ public class CaseWorkflowService {
                 )).toList();
     }
 
+    public List<TaskDTO> getTasksForAssignee(String assignee) {
+        return getTasksByUser(assignee);
+    }
+
     public void claimTask(String taskId, String user) {
         taskService.claim(taskId, user);
     }
