@@ -205,6 +205,7 @@ public class CaseWorkflowService {
                 runtimeService.getVariable(task.getProcessInstanceId(), "SSN_Valid"));
         response.put("incarcerationStatus",
                 runtimeService.getVariable(task.getProcessInstanceId(), "incarcerationStatus"));
+        response.put("Tenant_ID", task.getTenantId());
 
         return response;
     }
@@ -302,6 +303,16 @@ public class CaseWorkflowService {
 
         // completing task
         taskService.complete(taskId, variables);
+    }
+
+    public String getCaseTenantId(String taskId) {
+        return getTask(taskId).getTenantId();
+    }
+
+    public Task getTask(String taskId) {
+        return taskService.createTaskQuery()
+                .taskId(taskId)
+                .singleResult();
     }
 
 }

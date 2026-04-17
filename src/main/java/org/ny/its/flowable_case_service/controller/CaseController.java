@@ -66,6 +66,11 @@ public class CaseController {
         return service.getCaseDetails(taskId);
     }
 
+    @GetMapping("/tasks/{taskId}/tenantId")
+    public String getCaseTenantId(@PathVariable String taskId) {
+        return service.getCaseTenantId(taskId);
+    }
+
     @GetMapping("/tasks/{taskId}/address-details")
     public Map<String, Object> getAddressDetails(@PathVariable String taskId) {
 

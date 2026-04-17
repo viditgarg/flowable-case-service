@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +35,7 @@ public class Person {
     private String ssn;
 
     // Date of Birth
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @NotNull(message = "Date of birth is required.") // Ensure it's not null
     private LocalDate dateofbirth;
 
