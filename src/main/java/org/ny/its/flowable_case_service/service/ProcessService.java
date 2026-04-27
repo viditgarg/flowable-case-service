@@ -26,6 +26,8 @@ public class ProcessService {
         @Autowired
         private TaskService taskService;
 
+        private static final String PROCESS_KEY="case_process";
+
         public String startProcess(String appId, Person person) {
                 // You can pass all UI data as variables
                 // Map<String, Object> variables = new HashMap<>(request);
@@ -39,7 +41,7 @@ public class ProcessService {
 
                 ProcessInstance processInstance = runtimeService
                                 .createProcessInstanceBuilder()
-                                .processDefinitionKey("case_regVN11_T") // BPMN ID
+                                .processDefinitionKey(PROCESS_KEY)      //"case_regVN11_T") // BPMN ID
                                 .tenantId(appId)
                                 .variables(vars)
                                 .start();
@@ -49,7 +51,7 @@ public class ProcessService {
 
         public List<TaskDTO> getAllTasks(String appId) {
                 List<Task> tasks = taskService.createTaskQuery()
-                                .processDefinitionKeyLike("case_regVN11_T")
+                                .processDefinitionKeyLike(PROCESS_KEY) //"case_regVN11_T")
                                 .taskTenantId(appId)
                                 .list();
 
@@ -82,7 +84,7 @@ public class ProcessService {
 
         public List<ProcessDTO> getRunningProcesses(String appId) {
                 List<ProcessInstance> piList = runtimeService.createProcessInstanceQuery()
-                                .processDefinitionKey("case_regVN11_T")
+                                .processDefinitionKey(PROCESS_KEY) //"case_regVN11_T")
                                 .processInstanceTenantId(appId)
                                 .list();
 

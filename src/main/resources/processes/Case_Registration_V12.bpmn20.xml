@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:modeler="http://flowable.org/modeler"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef"
+             exporter="Flowable Open Source Modeler"
+             exporterVersion="6.7.2"
+             xsi:schemaLocation="
+                http://www.omg.org/spec/BPMN/20100524/MODEL
+                http://www.omg.org/spec/BPMN/2.0/20100501/BPMN20.xsd">
+
+    <process id="case_process" name="Case Registration Process Version 12" isExecutable="true">
+
+        <!-- START -->
+        <startEvent id="startEvent" flowable:initiator="initiator" flowable:formKey="caseregistrationform"
+                    flowable:formFieldValidation="true"/>
+
+        <!-- Case Details -->
+        <userTask id="caseDetailsTask" name="Validate Case Details"
+                  flowable:candidateGroups="stateworkers,managers"
+                  flowable:formKey="caseregistrationform" flowable:formFieldValidation="true"/>
+
+        <!-- Search Person -->
+        <serviceTask id="searchPersonST" name="Search Person" flowable:async="true"
+                     flowable:parallelInSameTransaction="false" flowable:type="http">
+            <extensionElements>
+                <flowable:field name="requestMethod">
+                    <flowable:string>POST</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestUrl">
+                    <flowable:string>http://localhost:9090/api/cases/searchPerson</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestHeaders">
+                    <flowable:string>Content-Type: application/json</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestBody">
+                    <flowable:expression><![CDATA[{
+                        "firstName":"${firstName}",
+                        "lastName":"${lastName}",
+                        "dob":"${dateofbirth}",
+                        "ssn":"${ssn}",
+                        "gender":"${gender}"
+                        }]]>
+                    </flowable:expression>
+                </flowable:field>
+                <flowable:field name="responseVariableName">
+                    <flowable:string>personExist</flowable:string>
+                </flowable:field>
+                <flowable:field name="saveResponseParameters">
+                    <flowable:string>true</flowable:string>
+                </flowable:field>
+                <flowable:field name="saveResponseVariableAsJson">
+                    <flowable:string>false</flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+
+        <!-- Parallel Split for SSN & DOCCS -->
+        <parallelGateway id="parallelSplit" name="Parallel Split Gateway"/>
+
+        <!-- SSN API -->
+        <serviceTask id="ssnApiTask" name="SSN Validation API" flowable:async="true"
+                     flowable:parallelInSameTransaction="false" flowable:type="http">
+            <extensionElements>
+                <flowable:field name="requestMethod">
+                    <flowable:string>POST</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestUrl">
+                    <flowable:string>http://localhost:9090/api/cases/ssnValidation</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestHeaders">
+                    <flowable:string>Content-Type: application/json</flowable:string>
+                </flowable:field>
+                <flowable:field name="requestBody">
+                    <flowable:expression><![CDATA[{ "ssn":"${ssn}" }]]></flowable:expression>
+                </flowable:field>
+                <flowable:field name="responseVariableName">
+                    <flowable:string>SSN_Valid</flowable:string>
+                </flowable:field>
+                <flowable:field name="saveResponseParameters">
+                    <flowable:string>false</flowable:string>
+                </flowable:field>
+                <flowable:field name="saveResponseVariableAsJson">
+                    <flowable:string>false</flowable:string>
+                </flowable:field>
+                <!--IMPORTANT: avoid 5s timeout -->
+                <flowable:field name="requestTimeout">
+                    <flowable:string>15000</flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+        <boundaryEvent id="ssnApiError" attachedToRef="ssnApiTask" cancelActivity="true">
+            <errorEventDefinition/>
+        </boundaryEvent>
+        <sequenceFlow id="flow-ssnError-to-manual" sourceRef="ssnApiError" targetRef="ssnManualTask"/>
+        <!-- SSN Gateway -->
+        <exclusiveGateway id="ssnGateway" default="flow-ssnGateway-to-manual" name="SSN API Response Gateway"/>
+        <userTask id="ssnManualTask" name="SSN Manual Review" flowable:candidateGroups="stateworkers,managers"
+                  flowable:formKey="detailsvalidationV2" flowable:formFieldValidation="true">
+            <extensionElements>
+                <modeler:activiti-idm-initiator>true</modeler:activiti-idm-initiator>
+            </extensionElements>
+        </userTask>
+
+        <!-- DOCCS API -->
+        <serviceTask id="doccsApiTask" name="DOCCS Validation API"
+                     flowable:delegateExpression="${incarcerationValidationService}">
+
+        </serviceTask>
+
+        <!-- DOCCS Gateway -->
+        <exclusiveGateway id="doccsGateway"  name="DOCCS API Response Gateway"/>
+        <userTask id="doccsManualTask" name="DOCCS Manual Review" flowable:candidateGroups="stateworkers,managers"
+                  flowable:formKey="detailsvalidationV2" flowable:formFieldValidation="true">
+            <extensionElements>
+                <modeler:activiti-idm-initiator>true</modeler:activiti-idm-initiator>
+            </extensionElements>
+        </userTask>
+
+        <!-- Review Incarceration -->
+        <userTask id="reviewIssuesTask" name="Issues Review Task" flowable:async="true" 
+                  flowable:formKey="reviewIncarcerationForm" flowable:formFieldValidation="true">
+            <extensionElements>
+                <modeler:initiator-can-complete xmlns:modeler="http://flowable.org/modeler">
+                    <![CDATA[true]]></modeler:initiator-can-complete>
+            </extensionElements>
+        </userTask>
+
+          <!-- Exclusive Gateway for status branching -->
+        <!-- 
+      
+        <exclusiveGateway id="reviewIncarcerationGateway" name="Incarceration Status Gateway"
+                          default="flow-to-parallel-if-not-incarcerated"/> -->
+
+        <!-- Parallel Join -->
+        <inclusiveGateway id="parallelJoin" name="Inclusive Join Gateway" />
+        <!-- flowable:async="true"/> -->
+
+        <!-- Address Entry -->
+        <userTask id="addressEntryTask" name="Enter Address Details"
+                  flowable:formKey="addressForm" flowable:formFieldValidation="true"/>
+
+        <!-- Postal Code SOAP Call -->
+        <serviceTask id="postalCodeServiceTask" name="Fetch Postal Code"
+                     flowable:delegateExpression="${postalCodeService}"
+                     flowable:async="false"/>
+
+        <!-- Address Review -->
+        <userTask id="addressReviewTask" name="Review Address Details"
+                  flowable:formKey="addressReviewForm" flowable:formFieldValidation="true"/>
+
+        <!-- Final Review -->
+        <userTask id="finalReviewTask" name="Final Validation Review"
+                  flowable:candidateGroups="stateworkers,managers"
+                  flowable:formKey="detailsvalidationV2" flowable:formFieldValidation="true" flowable:priority="10"/>
+
+      <!--   <exclusiveGateway id="ssnReviewGateway" name="SSN Review Gateway"
+                          default="sid-6AE2D3EF-A71C-4BFE-8841-8FA71D47BE45"/> -->
+        <exclusiveGateway id="decisionReviewGateway" name="Decision Review Gateway"/>
+        <sequenceFlow id="sid-FF1CEA13-A434-4797-91CA-444D546063C7" sourceRef="ssnManualTask"
+                      targetRef="parallelJoin"/>
+
+
+        <!-- END -->
+        <endEvent id="endEvent"/>
+
+        <!-- SEQUENCE FLOWS -->
+        <sequenceFlow id="flow-start-to-caseDetails" sourceRef="startEvent" targetRef="caseDetailsTask"/>
+        <sequenceFlow id="flow-caseDetails-to-searchPerson" sourceRef="caseDetailsTask" targetRef="searchPersonST"/>
+        <sequenceFlow id="flow-searchPerson-to-parallelSplit" sourceRef="searchPersonST" targetRef="parallelSplit"/>
+
+        <sequenceFlow id="flow-parallelSplit-to-ssn" sourceRef="parallelSplit" targetRef="ssnApiTask"/>
+        <sequenceFlow id="flow-parallelSplit-to-doccs" sourceRef="parallelSplit" targetRef="doccsApiTask"/>
+
+        <sequenceFlow id="flow-ssn-to-gateway" sourceRef="ssnApiTask" targetRef="ssnGateway"/>
+        <sequenceFlow id="flow-ssnGateway-to-manual" sourceRef="ssnGateway" targetRef="ssnManualTask"/>
+        <sequenceFlow id="flow-ssnGateway-to-join" sourceRef="ssnGateway" targetRef="parallelJoin">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${SSN_Valid != null && SSN_Valid.toString() == 'true'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow-doccs-to-gateway" sourceRef="doccsApiTask" targetRef="doccsGateway"/>
+
+        <sequenceFlow id="flow-doccsGateway-to-manual" sourceRef="doccsGateway" targetRef="doccsManualTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${incarcerationStatus != null && incarcerationStatus.toString() == 'Incarcerated'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow-doccsGateway-to-join" sourceRef="doccsGateway" targetRef="parallelJoin">
+            
+        </sequenceFlow>
+
+
+        <sequenceFlow id="flow-doccsManual-to-review" sourceRef="doccsManualTask"
+                      targetRef="parallelJoin"/>
+        <sequenceFlow id="flow-parallelJoin-to-decision" sourceRef="parallelJoin"
+                      targetRef="decisionReviewGateway"/>
+        
+
+        <sequenceFlow id="flow-to-issuesTask-if-incarcerated_or_ssn_invalid" sourceRef="decisionReviewGateway"
+                      targetRef="reviewIssuesTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${incarcerationStatus == 'Incarcerated' || SSN_Valid.toString() == 'false'}]]></conditionExpression>
+        </sequenceFlow>
+        <!-- <sequenceFlow id="sid-2CF02C74-2A5E-47E3-A3D5-E4C805DE4892" sourceRef="ssnReviewGateway"
+                      targetRef="reviewIssuesTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${SSN_Valid != null && SSN_Valid.toString() == 'false'}]]></conditionExpression>
+        </sequenceFlow> -->
+      <!--   <sequenceFlow id="flow-to-parallel-if-not-incarcerated" sourceRef="reviewIncarcerationGateway"
+                      targetRef="parallelJoin">
+        </sequenceFlow> -->
+
+        <sequenceFlow id="flow-parallelJoin-to-addressEntry" sourceRef="decisionReviewGateway" targetRef="addressEntryTask"/>
+        <sequenceFlow id="flow-addressEntry-to-postal" sourceRef="addressEntryTask" targetRef="postalCodeServiceTask"/>
+        <sequenceFlow id="flow-postal-to-review" sourceRef="postalCodeServiceTask" targetRef="addressReviewTask"/>
+        <sequenceFlow id="flow-review-to-final" sourceRef="addressReviewTask" targetRef="finalReviewTask"/>
+        <sequenceFlow id="flow-final-to-end" sourceRef="finalReviewTask" targetRef="endEvent"/>
+        <endEvent id="sid-FF96C903-2FCD-44E7-8CDE-FA8AACA1386C"/>
+        <sequenceFlow id="sid-3EBD5E2A-7021-4A6F-921E-1FD689CA66B8" sourceRef="reviewIssuesTask"
+                      targetRef="sid-FF96C903-2FCD-44E7-8CDE-FA8AACA1386C"/>
+       <!--  <sequenceFlow id="sid-6AE2D3EF-A71C-4BFE-8841-8FA71D47BE45" sourceRef="ssnReviewGateway"
+                      targetRef="parallelJoin"/> -->
+
+    </process>
+</definitions>

@@ -1,7 +1,6 @@
 package org.ny.its.flowable_case_service.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.ny.its.flowable_case_service.model.Person;
 import org.ny.its.flowable_case_service.model.ProcessDTO;
